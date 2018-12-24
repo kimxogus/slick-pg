@@ -34,16 +34,16 @@ trait PgArrayJdbcTypes extends JdbcTypesComponent { driver: PostgresProfile =>
 
     override def hasLiteralForm: Boolean = false
 
-    override def valueToSQLLiteral(vList: Seq[T]) = if(vList eq null) "NULL" else s"'${buildArrayStr(vList)}'"
+    override def valueToSQLLiteral(vList: Seq[T]): String = if(vList eq null) "NULL" else s"'${buildArrayStr(vList)}'::${sqlTypeName(None)}"
 
     //--
     protected def mkArray(v: Seq[T], conn: Option[Connection] = None): java.sql.Array = (v, conn) match {
-      case (v, Some(c)) if isPrimitive(v) && c.isWrapperFor(classOf[PgConnection]) =>
-        c.unwrap(classOf[PgConnection]).createArrayOf(sqlBaseType, v.toArray)
-      case (v, _) => utils.SimpleArrayUtils.mkArray(buildArrayStr)(sqlBaseType, v.map(tcomap))
+      case (value, Some(c)) if isPrimitive(value) && c.isWrapperFor(classOf[PgConnection]) =>
+        c.unwrap(classOf[PgConnection]).createArrayOf(sqlBaseType, value.toArray)
+      case (value, _) => utils.SimpleArrayUtils.mkArray(buildArrayStr)(sqlBaseType, value.map(tcomap))
     }
 
-    protected def isPrimitive(v: Seq[T]): Boolean = v.size > 0 && (
+    protected def isPrimitive(v: Seq[T]): Boolean = v.nonEmpty && (
       v.head.isInstanceOf[Short] ||
       v.head.isInstanceOf[Int] ||
       v.head.isInstanceOf[Long] ||
@@ -64,9 +64,9 @@ trait PgArrayJdbcTypes extends JdbcTypesComponent { driver: PostgresProfile =>
 
   ///
   class AdvancedArrayJdbcType[T](sqlBaseType: String,
-                                fromString: (String => Seq[T]),
-                                mkString: (Seq[T] => String),
-                                zero: Seq[T] = null.asInstanceOf[Seq[T]])(
+                                 fromString: String => Seq[T],
+                                 mkString: Seq[T] => String,
+                                 zero: Seq[T] = null.asInstanceOf[Seq[T]])(
               implicit override val classTag: ClassTag[Seq[T]], tag: ClassTag[T])
                     extends DriverJdbcType[Seq[T]] {
 
@@ -85,7 +85,7 @@ trait PgArrayJdbcTypes extends JdbcTypesComponent { driver: PostgresProfile =>
 
     override def hasLiteralForm: Boolean = false
 
-    override def valueToSQLLiteral(vList: Seq[T]) = if(vList eq null) "NULL" else s"'${mkString(vList)}'"
+    override def valueToSQLLiteral(vList: Seq[T]): String = if(vList eq null) "NULL" else s"'${mkString(vList)}'::${sqlTypeName(None)}"
 
     //--
     private def mkArray(vList: Seq[T]): java.sql.Array = utils.SimpleArrayUtils.mkArray(mkString)(sqlBaseType, vList)
@@ -110,7 +110,7 @@ trait PgArrayJdbcTypes extends JdbcTypesComponent { driver: PostgresProfile =>
 
     override def hasLiteralForm: Boolean = delegate.hasLiteralForm
 
-    override def valueToSQLLiteral(vList: SEQ[T]) = delegate.valueToSQLLiteral(Option(vList).orNull)
+    override def valueToSQLLiteral(vList: SEQ[T]): String = delegate.valueToSQLLiteral(Option(vList).orNull)
   }
 
   /// added to help check built-in support array types statically

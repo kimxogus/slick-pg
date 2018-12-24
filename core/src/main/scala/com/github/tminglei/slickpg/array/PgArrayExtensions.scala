@@ -29,32 +29,32 @@ trait PgArrayExtensions extends JdbcTypesComponent { driver: PostgresProfile =>
     protected implicit def b1Type: TypedType[SEQ[B0]] = implicitly[TypedType[SEQ[B0]]]
 
     /** required syntax: expression operator ANY (array expression) */
-    def any[R](implicit om: o#to[B0, R]) = om.column(ArrayLibrary.Any, n)
+    def any[R](implicit om: o#to[B0, R]): Rep[R] = om.column(ArrayLibrary.Any, n)
     /** required syntax: expression operator ALL (array expression) */
-    def all[R](implicit om: o#to[B0, R]) = om.column(ArrayLibrary.All, n)
+    def all[R](implicit om: o#to[B0, R]): Rep[R] = om.column(ArrayLibrary.All, n)
 
-    def @>[P2, R](e: Rep[P2])(implicit om: o#arg[SEQ[B0], P2]#to[Boolean, R]) = {
+    def @>[P2, R](e: Rep[P2])(implicit om: o#arg[SEQ[B0], P2]#to[Boolean, R]): Rep[R] = {
         om.column(ArrayLibrary.Contains, n, e.toNode)
       }
-    def <@:[P2, R](e: Rep[P2])(implicit om: o#arg[SEQ[B0], P2]#to[Boolean, R]) = {
+    def <@:[P2, R](e: Rep[P2])(implicit om: o#arg[SEQ[B0], P2]#to[Boolean, R]): Rep[R] = {
         om.column(ArrayLibrary.ContainedBy, e.toNode, n)
       }
-    def @&[P2, R](e: Rep[P2])(implicit om: o#arg[SEQ[B0], P2]#to[Boolean, R]) = {
+    def @&[P2, R](e: Rep[P2])(implicit om: o#arg[SEQ[B0], P2]#to[Boolean, R]): Rep[R] = {
         om.column(ArrayLibrary.Overlap, n, e.toNode)
       }
 
-    def ++[P2, R](e: Rep[P2])(implicit om: o#arg[SEQ[B0], P2]#to[SEQ[B0], R]) = {
+    def ++[P2, R](e: Rep[P2])(implicit om: o#arg[SEQ[B0], P2]#to[SEQ[B0], R]): Rep[R] = {
         om.column(ArrayLibrary.Concatenate, n, e.toNode)
       }
-    def + [P2, R](e: Rep[P2])(implicit om: o#arg[B0, P2]#to[SEQ[B0], R]) = {
+    def + [P2, R](e: Rep[P2])(implicit om: o#arg[B0, P2]#to[SEQ[B0], R]): Rep[R] = {
         om.column(ArrayLibrary.Concatenate, n, e.toNode)
       }
-    def +:[P2, R](e: Rep[P2])(implicit om: o#arg[B0, P2]#to[SEQ[B0], R]) = {
+    def +:[P2, R](e: Rep[P2])(implicit om: o#arg[B0, P2]#to[SEQ[B0], R]): Rep[R] = {
         om.column(ArrayLibrary.Concatenate, e.toNode, n)
       }
-    def length[R](dim: Rep[Int] = LiteralColumn(1))(implicit om: o#to[Int, R]) = {
+    def length[R](dim: Rep[Int] = LiteralColumn(1))(implicit om: o#to[Int, R]): Rep[R] = {
         om.column(Library.IfNull, ArrayLibrary.Length.column[Int](n, dim.toNode).toNode, LiteralNode(0))
       }
-    def unnest[R](implicit om: o#to[B0, R]) = om.column(ArrayLibrary.Unnest, n)
+    def unnest[R](implicit om: o#to[B0, R]): Rep[R] = om.column(ArrayLibrary.Unnest, n)
   }
 }
